@@ -25,7 +25,6 @@ void setup(void) {
 int find_avg(int valueArray[]){       // we know the size of the array so passing it is simple
   int avg = 0;
   for(int i = 0; i < 4; i++){
-    //Serial.print(valueArray[i]);Serial.print(" ");
     avg += valueArray[i];
   }
   avg = avg/4.0;
@@ -48,7 +47,6 @@ void loop() {
     //myYr[loop_counter] = mma.y;
     //myZr[loop_counter] = mma.z;
   
-    /* Get a new sensor event */ 
     sensors_event_t event; 
     mma.getEvent(&event);
 

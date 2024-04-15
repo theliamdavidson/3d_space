@@ -5,19 +5,15 @@ from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QLabel
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QFont
 from queue import Queue
-from time import sleep
 
 class DeviceCommunicationThread(QThread):
-    # this class is on hold until telemetry is finished
-    # modify as needed
     measurements_updated = pyqtSignal(dict)
     def __init__(self, queue):
         super().__init__()
-        self.modbus_data_queue = queue
+        self.data_queue = queue
 
     def run(self):
         with serial.Serial('COM5', 9600, timeout=1) as ser:
-            ser.write(b'HANDSHAKE_REQUESTED\n')
             while not self.isInterruptionRequested():
                 received_values = {"x" : None,
                                    "y" : None,
@@ -25,19 +21,12 @@ class DeviceCommunicationThread(QThread):
                 count = 0
                 while count < 3:
                     response = ser.readline().decode().strip()
-                    print(response)
-
                     values = response.split(':')
                     if values[0] in received_values:
                         received_values[values[0]] = values[1]
-                        count += 1
-                    print(count)
-                    
-
-                #print(received_values)
+                        count += 1                    
                 self.measurements_updated.emit(received_values)
                 
-
 
 class viewWindow(QWidget):
     def __init__(self):
@@ -66,11 +55,9 @@ class viewWindow(QWidget):
         self.show()
     
     def updateData(self, values):
-        print("------")
         for label, labelIndex in self.value_labels.items():
             value = values[label]
-            labelIndex.setText(f'{label}: {value}')#:.2f}') these won't be a float unless we do tens shifting from the plc
-        print("------")
+            labelIndex.setText(f'{label}: {value}')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
