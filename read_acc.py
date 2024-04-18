@@ -4,7 +4,7 @@ import pyqtgraph as pg
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QProgressBar
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QFont
-from time import sleep
+import logging
 
 class DeviceCommunicationThread(QThread):
     measurements_updated = pyqtSignal(dict)
@@ -16,16 +16,22 @@ class DeviceCommunicationThread(QThread):
         with serial.Serial(self.comPort, 9600, timeout=1) as ser:
             while not self.isInterruptionRequested():
                 received_values = {"x" : None,
-                                "y" : None,
-                                "z" : None}
-                count = 0
-                while count < 3:
-                    response = ser.readline().decode().strip()
-                    values = response.split(':')
-                    if values[0] in received_values:
-                        received_values[values[0]] = values[1]
-                        count += 1                    
-                self.measurements_updated.emit(received_values)
+                                   "y" : None,
+                                   "z" : None}
+                self.cleanEmit(ser, received_values)
+
+    def cleanEmit(self, ser, received_values):
+        count = 0
+        while count < 3:
+            response = ser.readline().decode().strip()
+            values = response.split(':')
+            if values[0] in received_values:
+                received_values[values[0]] = values[1]
+                count += 1     
+            else:
+                logging.info(response)
+            logging.debug('emit')
+        self.measurements_updated.emit(received_values)
 
             
 class ViewWindow(QWidget):
@@ -89,11 +95,12 @@ class ViewWindow(QWidget):
         self.show()
     
     def updateData(self, values):
-        while self.lock == False:
-            sleep(.1)
-            print("wait")
+        #while self.lock == False:
+        #    sleep(.1)
+        #    print("wait")
 
-        self.lock = False
+        #self.lock = False
+        logging.debug('update')
         for label, labelIndex in self.rawValueLabels.items():
             value = values[label]
             labelIndex.setText(f'{label}: {value}')
@@ -107,22 +114,24 @@ class ViewWindow(QWidget):
                 else:
                     progress = 100 if value == 0 else 0
                 self.progressBars[label].setValue(progress)
-        self.lock = True
+        #self.lock = True
 
 
     def freezeCalled(self):
-        while self.lock == False:
-            sleep(.1)
-            print("wait")
+        #while self.lock == False:
+        #    sleep(.1)
+        #    print("wait")
 
-        self.lock = False
+        #self.lock = False
+        logging.debug('frozen')
         for label, labelIndex in self.savedValueLabels.items():
             value = self.measurements[label] 
             labelIndex.setText(f'{label}: {value}')
-            print(label, value)
-        self.lock = True
+            logging.debug(label, value)
+        #self.lock = True
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='app.log', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
     app = QApplication(sys.argv)
     window = ViewWindow()
     sys.exit(app.exec_())
