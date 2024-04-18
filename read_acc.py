@@ -89,9 +89,9 @@ class ViewWindow(QWidget):
         self.show()
     
     def updateData(self, values):
-        #while self.lock == False:
-         #   sleep(.1)
-        #    print("wait")
+        while self.lock == False:
+            sleep(.1)
+            print("wait")
 
         self.lock = False
         for label, labelIndex in self.rawValueLabels.items():
@@ -106,15 +106,14 @@ class ViewWindow(QWidget):
                     progress = int((1 - difference / abs(saved_value)) * 100)
                 else:
                     progress = 100 if value == 0 else 0
-                #progress = int((1 - difference / saved_value) * 100)
                 self.progressBars[label].setValue(progress)
         self.lock = True
 
 
     def freezeCalled(self):
-        #while self.lock == False:
-         #   sleep(.1)
-          #  print("wait")
+        while self.lock == False:
+            sleep(.1)
+            print("wait")
 
         self.lock = False
         for label, labelIndex in self.savedValueLabels.items():
