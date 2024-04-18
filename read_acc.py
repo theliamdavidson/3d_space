@@ -10,7 +10,7 @@ class DeviceCommunicationThread(QThread):
     measurements_updated = pyqtSignal(dict)
     def __init__(self, ):
         super().__init__()
-        self.comPort = 'COM8'
+        self.comPort = 'COM5'
 
     def run(self):
         try:
@@ -20,20 +20,23 @@ class DeviceCommunicationThread(QThread):
                 self.searchForCom(index)
 
     def communicateWithIMU(self):
-        with serial.Serial(self.comPort, 9600, timeout=1) as ser:
-                while not self.isInterruptionRequested():
-                    received_values = {"x" : None,
-                                    "y" : None,
-                                    "z" : None}
-                    count = 0
-                    while count < 3:
-                        response = ser.readline().decode().strip()
-                        values = response.split(':')
-                        if values[0] in received_values:
-                            received_values[values[0]] = values[1]
-                            count += 1                    
-                    self.measurements_updated.emit(received_values)
-
+        while True:
+            try:
+                with serial.Serial(self.comPort, 9600, timeout=1) as ser:
+                        while not self.isInterruptionRequested():
+                            received_values = {"x" : None,
+                                            "y" : None,
+                                            "z" : None}
+                            count = 0
+                            while count < 3:
+                                response = ser.readline().decode().strip()
+                                values = response.split(':')
+                                if values[0] in received_values:
+                                    received_values[values[0]] = values[1]
+                                    count += 1                    
+                            self.measurements_updated.emit(received_values)
+            except:
+                self.comPort = 'COM8'
     def searchForCom(self, index):
         try:
             with serial.Serial(self.comPort, 9600, timeout=1) as ser:
@@ -75,7 +78,8 @@ class ViewWindow(QWidget):
         for measurement in measurementLabels:
             value_label = QLabel("Connecting...", alignment=Qt.AlignCenter)    # if "Connecting" remains for more than 10 seconds, something is wrong with the connection
             savedValueLabel = QLabel("", alignment=Qt.AlignCenter)
-            visualAid = QProgressBar()
+            visualAid = QProgressBar(alignment=Qt.AlignCenter)
+            visualAid.setValue(0)
 
             value_label.setFont(QFont('Arial', 20))
             savedValueLabel.setFont(QFont('Arial', 20))
