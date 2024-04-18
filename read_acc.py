@@ -13,37 +13,21 @@ class DeviceCommunicationThread(QThread):
         self.comPort = 'COM5'
 
     def run(self):
-        try:
-            self.communicateWithIMU()
-        except serial.serialutil.SerialException:
-            for index in range(1,13):
-                self.searchForCom(index)
+        with serial.Serial(self.comPort, 9600, timeout=1) as ser:
+            while not self.isInterruptionRequested():
+                received_values = {"x" : None,
+                                "y" : None,
+                                "z" : None}
+                count = 0
+                while count < 3:
+                    response = ser.readline().decode().strip()
+                    values = response.split(':')
+                    if values[0] in received_values:
+                        received_values[values[0]] = values[1]
+                        count += 1                    
+                self.measurements_updated.emit(received_values)
 
-    def communicateWithIMU(self):
-        while True:
-            try:
-                with serial.Serial(self.comPort, 9600, timeout=1) as ser:
-                        while not self.isInterruptionRequested():
-                            received_values = {"x" : None,
-                                            "y" : None,
-                                            "z" : None}
-                            count = 0
-                            while count < 3:
-                                response = ser.readline().decode().strip()
-                                values = response.split(':')
-                                if values[0] in received_values:
-                                    received_values[values[0]] = values[1]
-                                    count += 1                    
-                            self.measurements_updated.emit(received_values)
-            except:
-                self.comPort = 'COM8'
-    def searchForCom(self, index):
-        try:
-            with serial.Serial(self.comPort, 9600, timeout=1) as ser:
-                print(ser.readline().decode().strip())
-        except serial.serialutil.SerialException:
-            pass
-
+            
 class ViewWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -125,7 +109,6 @@ class ViewWindow(QWidget):
                 #progress = int((1 - difference / saved_value) * 100)
                 self.progressBars[label].setValue(progress)
         self.lock = True
-
 
 
     def freezeCalled(self):
