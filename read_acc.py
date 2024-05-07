@@ -45,7 +45,6 @@ class ViewWindow(QWidget):
         self.measurements = {"x" : None,
                              "y" : None,
                              "z" : None}
-        self.lock = True
 
     def keyPressEvent(self, event):
        if event.key() == Qt.Key_Space:
@@ -53,7 +52,6 @@ class ViewWindow(QWidget):
 
     def initUI(self):
         self.setWindowTitle("IMU Readings")
-        #self.setGeometry(10,30,1890,1080)
         layout = QVBoxLayout(self)
         rawDataHorizontal = QHBoxLayout(self)
         savedDataHorizontal = QHBoxLayout(self)
@@ -95,11 +93,6 @@ class ViewWindow(QWidget):
         self.show()
     
     def updateData(self, values):
-        #while self.lock == False:
-        #    sleep(.1)
-        #    print("wait")
-
-        #self.lock = False
         logging.debug('update')
         for label, labelIndex in self.rawValueLabels.items():
             value = values[label]
@@ -114,21 +107,14 @@ class ViewWindow(QWidget):
                 else:
                     progress = 100 if value == 0 else 0
                 self.progressBars[label].setValue(progress)
-        #self.lock = True
 
 
     def freezeCalled(self):
-        #while self.lock == False:
-        #    sleep(.1)
-        #    print("wait")
-
-        #self.lock = False
         logging.debug('frozen')
         for label, labelIndex in self.savedValueLabels.items():
             value = self.measurements[label] 
             labelIndex.setText(f'{label}: {value}')
             logging.debug(label, value)
-        #self.lock = True
 
 if __name__ == '__main__':
     logging.basicConfig(filename='app.log', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
